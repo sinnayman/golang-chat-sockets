@@ -42,6 +42,7 @@
             </div>
             <div class="col-md-4">
                 <h3>Online Users</h3>
+                <div id="users_list" name="users_list"></div>
             </div>
         </div>
     </div>
@@ -49,6 +50,7 @@
 </body>
 <script>
     let socket = null;
+    let users = [];
     document.addEventListener("DOMContentLoaded", function() {
         socket = new WebSocket("ws://127.0.0.1:8080/ws");
         socket.onopen = () => {
@@ -66,7 +68,27 @@
         socket.onmessage = (msg) => {
             let j = JSON.parse(msg.data);
             console.log(j);
+
+            if (j.action === "update_users") {
+                update_users(j.connected_users);
+            }
         }
+
+        function update_users(users) {
+            let userListElement = document.getElementById("users_list")
+            let usersList = users.map(function(el) {
+                return "<li>" + el + "</li>";
+            });
+            userListElement.innerHTML = "<ul>" + usersList + "</ul>";
+        }
+
+        document.getElementById("username").addEventListener("change", function() {
+            socket.send(JSON.stringify({
+                "action": "user_joined",
+                "username": this.value,
+                "message": ""
+            }));
+        })
     });
 </script>
 </html>
