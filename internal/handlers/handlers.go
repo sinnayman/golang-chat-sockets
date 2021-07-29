@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
+	"sort"
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gorilla/websocket"
@@ -36,9 +36,10 @@ type WebSocketConnection struct {
 }
 
 type WsResponse struct {
-	Action      string `json:"action"`
-	Message     string `json:"message"`
-	MessageType string `json:"message_type"`
+	Action         string   `json:"action"`
+	Message        string   `json:"message"`
+	MessageType    string   `json:"message_type"`
+	ConnectedUsers []string `json:"connected_users"`
 }
 
 type WsPayload struct {
@@ -90,16 +91,30 @@ func listenForWs(connection *WebSocketConnection) {
 
 }
 
-func Listen(wg sync.WaitGroup) {
-	defer wg.Done()
+func Listen() {
 	var response WsResponse
 
 	for {
 		m := <-wsChan
-		response.Action = "Got Here"
-		response.Message = fmt.Sprintf("Some message and action was %s", m.Action)
+
+		switch m.Action {
+		case "user_joined":
+			clients[m.Conn] = m.Username
+			response.Action = "update_users"
+			response.ConnectedUsers = getUsersList()
+			fmt.Println(response)
+		}
 		broadcast(response)
 	}
+}
+
+func getUsersList() []string {
+	var usersList []string
+	for _, client := range clients {
+		usersList = append(usersList, client)
+	}
+	sort.Strings(usersList)
+	return usersList
 }
 
 func broadcast(response WsResponse) {
