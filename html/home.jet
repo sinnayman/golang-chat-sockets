@@ -7,7 +7,17 @@
     <title>Home</title>
 </head>
 <body>
-    <h1>Hello Peeps!</h1>
+    <h5>Simple Chat App</h5>
     This is a web page
 </body>
+
+<script>
+let socket = null;
+document.addEventListener("DOMContentLoaded", function() {
+    socket = new WebSocket("ws://127.0.0.1:8080/ws");
+    socket.onopen = () => {
+        console.log("Connection open");
+    }
+});
+</script>
 </html>
